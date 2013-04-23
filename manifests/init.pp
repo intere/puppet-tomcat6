@@ -44,13 +44,14 @@ class tomcat6 {
 }
 
 define tomcat::deployment($path) {
+	include tomcat6
+  	notice("Establishing http://$hostname:${tomcat6::tomcat_port}/$name/")
  
-  include tomcat6
-  notice("Establishing http://$hostname:${tomcat6::tomcat_port}/$name/")
- 
-  file { "/opt/apache-tomcat-6.0.36/webapps/${name}.war":
-    owner => 'root',
-    source => $path,
-  }
+	file { "/opt/apache-tomcat-6.0.36/webapps/${name}.war":
+		owner => 'apache-tomcat',
+		group => 'www-data',
+		source => $path,
+		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ]
+	}
 }
 
