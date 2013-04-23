@@ -1,64 +1,56 @@
 class tomcat6 {
  
-  include tomcat6::params
-  include tomcat6::generic
-  
-  case $operatingsystem {
-      'RedHat', 'CentOS': { include tomcat6::centos  }
-      /^(Debian|Ubuntu)$/:{ include tomcat6::debian  }
-    }
- 
-  $tomcat_port = 8080
- 
-  notice("Establishing http://$hostname:$tomcat_port/")
- 
-  Package { # defaults
-    ensure => installed,
-  }
- 
-  file { "/etc/tomcat6/tomcat-users.xml":
-    owner => 'root',
-    require => Package['tomcat6'],
-    notify => Service['tomcat6'],
-    source => "puppet:///modules/tomcat6/tomcat-users.xml",
-  }
- 
-  service { 'tomcat6':
-    ensure => running,
-    require => Package['tomcat6'],
-  }
-}
+	exec {
+		"download_tomcat6" :
+			cwd => "/tmp",
+			command => "/usr/bin/wget http://mirror.nexcess.net/apache/tomcat/tomcat-6/v6.0.36/bin/apache-tomcat-6.0.36.tar.gz",
+			creates => "/tmp/apache-tomcat-6.0.36.tar.gz";
 
-class tomcat6::generic {
-  package { 'tomcat6':
-  }
-  package { 'tomcat6-admin':
-    require => Package['tomcat6'],
-    name   => $tomcat6::params::tomcat6_admin_package,
-  }
-}
+		"unpack_tomcat6" :
+			cwd => "/opt",
+			command => "/bin/tar -zxf /tmp/apache-tomcat-6.0.36.tar.gz",
+			creates => "/opt/apache-tomcat-6.0.36",
+			require => [ Exec["download_tomcat6"] ];
+	}
 
-class tomcat6::centos {
-  package { 'tomcat6-webapps':
-    require => Package['tomcat6']
-  }
-}
+	file { "/opt/apache-tomcat-6.0.36" :
+		recurse => true,
+		owner => 'apache-tomcat',
+		group => 'www-data',
+		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat']  ]
+	}
+ 
+  	file { "/opt/apache-tomcat-6.0.36/conf/tomcat-users.xml":
+    		owner => 'apache-tomcat',
+		group => 'www-data',
+    		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ],
+    		notify => Service['tomcat'],
+    		source => "puppet:///modules/tomcat6/tomcat-users.xml"
+  	}
+	
+	group { "www-data" :
+		ensure => "present"
+	}
 
-class tomcat6::debian {
-  package { 'tomcat6-user':
-    require => Package['tomcat6']
-  }
+	user { "apache-tomcat" :
+		ensure => "present",
+		gid => "www-data"
+	}
+ 
+  	service { 'tomcat':
+    		ensure => running,
+    		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ]
+  	}
 }
-
 
 define tomcat::deployment($path) {
  
   include tomcat6
   notice("Establishing http://$hostname:${tomcat6::tomcat_port}/$name/")
  
-  file { "/var/lib/tomcat6/webapps/${name}.war":
+  file { "/opt/apache-tomcat-6.0.36/webapps/${name}.war":
     owner => 'root',
     source => $path,
   }
- 
 }
+
