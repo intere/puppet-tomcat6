@@ -27,6 +27,11 @@ class tomcat6 {
     		notify => Service['tomcat'],
     		source => "puppet:///modules/tomcat6/tomcat-users.xml"
   	}
+	file { "/etc/init/tomcat.conf" :
+		owner => 'root',
+		group => 'root',
+		source => 'puppet:///modules/tomcat6/tomcat.conf'
+	}
 	
 	group { "www-data" :
 		ensure => "present"
@@ -51,7 +56,8 @@ define tomcat::deployment($path) {
 		owner => 'apache-tomcat',
 		group => 'www-data',
 		source => $path,
-		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ]
+		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ],
+		notify => Service['tomcat']
 	}
 }
 
