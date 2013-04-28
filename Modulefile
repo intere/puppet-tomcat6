@@ -6,5 +6,3 @@ license 'Apache 2.0'
 summary 'Tomcat6 Module'
 description 'Deploys and manages a Tomcat6 service and applications under it'
 project_page 'https://github.com/intere/puppet-j2se'
-
-dependency 'intere/puppet-j2se', '>= 0.0.1'
