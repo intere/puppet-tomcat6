@@ -15,15 +15,15 @@ class tomcat6 {
 
 	file { "/opt/apache-tomcat-6.0.36" :
 		recurse => true,
-		owner => 'apache-tomcat',
-		group => 'www-data',
-		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat']  ]
+		owner => 'tomcat',
+		group => 'tomcat',
+		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat']  ]
 	}
  
   	file { "/opt/apache-tomcat-6.0.36/conf/tomcat-users.xml":
-    		owner => 'apache-tomcat',
-		group => 'www-data',
-    		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ],
+    		owner => 'tomcat',
+		group => 'tomcat',
+    		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat'] ],
     		notify => Service['tomcat'],
     		source => "puppet:///modules/tomcat6/tomcat-users.xml"
   	}
@@ -33,18 +33,18 @@ class tomcat6 {
 		source => 'puppet:///modules/tomcat6/tomcat.conf'
 	}
 	
-	group { "www-data" :
+	group { "tomcat" :
 		ensure => "present"
 	}
 
-	user { "apache-tomcat" :
+	user { "tomcat" :
 		ensure => "present",
-		gid => "www-data"
+		gid => "tomcat"
 	}
  
   	service { 'tomcat':
     		ensure => running,
-    		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ]
+    		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat'] ]
   	}
 }
 
@@ -53,10 +53,10 @@ define tomcat::deployment($path) {
   	notice("Establishing http://$hostname:${tomcat6::tomcat_port}/$name/")
  
 	file { "/opt/apache-tomcat-6.0.36/webapps/${name}.war":
-		owner => 'apache-tomcat',
-		group => 'www-data',
+		owner => 'tomcat',
+		group => 'tomcat',
 		source => $path,
-		require => [ Exec['unpack_tomcat6'], Group['www-data'], User['apache-tomcat'] ],
+		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat'] ],
 		notify => Service['tomcat']
 	}
 }
