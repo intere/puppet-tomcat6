@@ -1,8 +1,0 @@
-name    'puppet-tomcat6'
-version '0.0.1'
-source 'https://github.com/intere/puppet-tomcat6.git'
-author 'Eric Internicola'
-license 'Apache 2.0'
-summary 'Tomcat6 Module'
-description 'Deploys and manages a Tomcat6 service and applications under it'
-project_page 'https://github.com/intere/puppet-j2se'
