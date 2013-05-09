@@ -1,5 +1,25 @@
+
+class tomcat6::prereqs {
+
+	if !defined(Group['tomcat']) {
+		group { "tomcat" :
+			ensure => "present"
+		}
+	}
+
+	if !defined(User['tomcat']) {
+		user { "tomcat" :
+			ensure => "present",
+			gid => "tomcat",
+			require => Group['tomcat']
+		}
+	}
+}
+
 class tomcat6 {
- 
+ 	
+ 	include tomcat6::prereqs
+
 	exec {
 		"download_tomcat6" :
 			cwd => "/tmp",
@@ -17,13 +37,13 @@ class tomcat6 {
 		recurse => true,
 		owner => 'tomcat',
 		group => 'tomcat',
-		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat']  ]
+		require => [ Exec['unpack_tomcat6'], Class['tomcat6::prereqs'] ]
 	}
  
   	file { "/opt/apache-tomcat-6.0.36/conf/tomcat-users.xml":
     		owner => 'tomcat',
-		group => 'tomcat',
-    		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat'] ],
+			group => 'tomcat',
+    		require => [ Exec['unpack_tomcat6'], Class['tomcat6::prereqs'] ],
     		notify => Service['tomcat'],
     		source => "puppet:///modules/tomcat6/tomcat-users.xml"
   	}
@@ -32,19 +52,10 @@ class tomcat6 {
 		group => 'root',
 		source => 'puppet:///modules/tomcat6/tomcat.conf'
 	}
-	
-	group { "tomcat" :
-		ensure => "present"
-	}
-
-	user { "tomcat" :
-		ensure => "present",
-		gid => "tomcat"
-	}
  
   	service { 'tomcat':
     		ensure => running,
-    		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat'] ]
+    		require => [ Exec['unpack_tomcat6'], Class['tomcat6::prereqs'] ]
   	}
 }
 
@@ -56,7 +67,7 @@ define tomcat::deployment($path) {
 		owner => 'tomcat',
 		group => 'tomcat',
 		source => $path,
-		require => [ Exec['unpack_tomcat6'], Group['tomcat'], User['tomcat'] ],
+		require => [ Exec['unpack_tomcat6'], Class['tomcat6::prereqs'] ],
 		notify => Service['tomcat']
 	}
 }
